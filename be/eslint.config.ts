@@ -5,7 +5,17 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'coverage', '.env.*', 'Dockerfile', '**/*.config.ts'],
+    ignores: [
+      'dist',
+      'node_modules',
+      'coverage',
+      '.env.*',
+      'Dockerfile',
+      '**/*.config.ts',
+      'config',
+      'migrations',
+      'seeders',
+    ],
   },
 
   js.configs.recommended,

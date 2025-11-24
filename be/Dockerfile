@@ -21,6 +21,10 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/config ./config
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/seeders ./seeders
+COPY --from=builder /app/.sequelizerc ./.sequelizerc
 
 EXPOSE 3000
 

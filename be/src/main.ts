@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import sequelize from './configs/database';
 
 dotenv.config();
 
@@ -16,6 +17,8 @@ app.get('/', (req: Request, res: Response) => {
 
 const server = async () => {
   try {
+    await sequelize.authenticate();
+    console.log('Database connected');
     app.listen(PORT, () => {
       console.log(`Backend running on port ${PORT}`);
     });

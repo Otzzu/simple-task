@@ -20,6 +20,7 @@ services:
       - ./be/.env
     depends_on:
       - db
+    command: sh -c "npx sequelize-cli db:migrate && npm start"
 
 volumes:
   pgdata:
