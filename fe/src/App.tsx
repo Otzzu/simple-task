@@ -1,35 +1,105 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import client from "@/api/client";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
+import KanbanBoard from "./components/kanban-board";
+import CreateTaskModal from "./components/create-task-modal";
+import { Toaster } from "./components/ui/sonner";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tasks, setTasks] = useState<GroupedTasks>({
+    "To Do": [],
+    "In Progress": [],
+    Done: [],
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await client.get<ApiResponse<GroupedTasks>>("/tasks");
+      setTasks(response.data.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const handleCreateTask = async (
+    title: string,
+    description: string
+  ): Promise<{
+    data?: Task;
+    message: string;
+    details?: Record<string, string>;
+    isError: boolean;
+  }> => {
+    try {
+      const data = await client.post<ApiResponse<Task>>("/tasks", {
+        title,
+        description,
+      });
+      await fetchTasks();
+      toast.success("Berhasil membuat task");
+      return { ...data.data, isError: false };
+    } catch (err: unknown) {
+      toast.error("Gagal membuat task");
+      console.error(err);
+      if (err instanceof AxiosError) {
+        const data = (err.response?.data as ApiErrorResponse) || null;
+        return { ...data, isError: true };
+      } else {
+        return {
+          message: "Something went wrong",
+          isError: true,
+        };
+      }
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-white p-6 overflow-y-auto">
+      <Toaster position="top-right" richColors />
+      <div className="max-w-[1400px] w-full mx-auto h-full flex flex-col">
+        <header className="flex justify-between items-center mb-8 shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              Task Board
+            </h1>
+            <p className="text-slate-500 text-sm">Manage tasks</p>
+          </div>
+          <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+            <PlusIcon className="h-4 w-4" />
+            New Task
+          </Button>
+        </header>
+
+        <main className="flex-1 overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center h-full text-slate-400 animate-pulse">
+              Loading board...
+            </div>
+          ) : (
+            <KanbanBoard initialTasks={tasks} refreshTasks={fetchTasks} />
+          )}
+        </main>
+
+        <CreateTaskModal
+          key={isModalOpen ? "open" : "closed"}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreateTask}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

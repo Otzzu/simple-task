@@ -49,7 +49,7 @@ export const getTasks = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-// PUT /api/tasks/:id
+// PUT /api/tasks/:id (partial update)
 export const updateTask = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
