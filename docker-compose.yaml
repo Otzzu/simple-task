@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:18-alpine
+    image: postgres:latest
     container_name: task_db_container
     restart: always
     env_file:
@@ -21,6 +21,17 @@ services:
     depends_on:
       - db
     command: sh -c "npx sequelize-cli db:migrate && npm start"
+  
+  frontend:
+    build: ./fe
+    container_name: task_fe_container
+    restart: always
+    ports:
+      - "5173:80"
+    env_file:
+      - ./fe/.env
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
