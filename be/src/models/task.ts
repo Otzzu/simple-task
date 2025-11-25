@@ -13,7 +13,7 @@ class Task extends Model<InferAttributes<Task>, InferCreationAttributes<Task>> {
   declare id: CreationOptional<string>;
   declare title: string;
   declare description: string | null;
-  declare status: TaskStatus;
+  declare status: CreationOptional<TaskStatus>;
 
   declare readonly createdAt: CreationOptional<Date>;
   declare readonly updatedAt: CreationOptional<Date>;

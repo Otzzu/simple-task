@@ -1,7 +1,10 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import sequelize from './configs/database';
+import { errorHandler } from './middlewares/errorHandler';
+import taskRouter from './routes/taskRoute';
+import { AppError } from './utils/AppError';
 
 dotenv.config();
 
@@ -11,9 +14,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response) => {
-  res.status(200).send('hello world');
+app.get('/', (_req: Request, res: Response) => {
+  res.status(200).json({
+    message: 'Backend Task Management is Running!',
+  });
 });
+
+app.use('/api/tasks', taskRouter);
+
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
+});
+
+app.use(errorHandler);
 
 const server = async () => {
   try {
