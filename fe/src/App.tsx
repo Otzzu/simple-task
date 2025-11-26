@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import client from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
@@ -17,20 +17,33 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async (signal?: AbortSignal) => {
     try {
-      const response = await client.get<ApiResponse<GroupedTasks>>("/tasks");
+      const response = await client.get<ApiResponse<GroupedTasks>>("/tasks", {
+        signal,
+      });
       setTasks(response.data.data);
     } catch (err) {
+      if (err instanceof AxiosError && err.name === "CanceledError") {
+        console.log("Request canceled");
+        return;
+      }
       console.error(err);
+      toast.error("Something went wrong!!");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    const controller = new AbortController();
+
+    fetchTasks(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchTasks]);
 
   const handleCreateTask = async (
     title: string,
