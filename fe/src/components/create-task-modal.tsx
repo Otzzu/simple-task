@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
+  initialData: Task | null;
   onClose: () => void;
   onSubmit: (
     title: string,
@@ -27,11 +28,14 @@ interface CreateTaskModalProps {
 
 const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   isOpen,
+  initialData,
   onClose,
   onSubmit,
 }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(
+    initialData?.description || ""
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +45,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     setLoading(true);
     const data = await onSubmit(title, description);
     setLoading(false);
+
     if (data.isError) {
       if (data.details) {
         setError(data.details["title"]);
@@ -57,7 +62,9 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Tambah Tugas Baru</DialogTitle>
+            <DialogTitle>
+              {initialData ? "Edit Tugas" : "Tambah Tugas Baru"}
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -103,7 +110,11 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               Batal
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Menyimpan..." : "Simpan"}
+              {loading
+                ? "Menyimpan..."
+                : initialData
+                ? "Simpan Perubahan"
+                : "Buat Tugas"}
             </Button>
           </DialogFooter>
         </form>

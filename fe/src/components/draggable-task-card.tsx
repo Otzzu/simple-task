@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrashIcon } from "lucide-react";
+import { PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +30,7 @@ interface DraggableTaskCardProps {
   index: number;
   onDelete: (id: string) => Promise<void>;
   onStatusChange: (id: string, newStatus: TaskStatus) => Promise<void>;
+  onEdit: (task: Task) => void;
 }
 
 const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
@@ -37,6 +38,7 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
   index,
   onDelete,
   onStatusChange,
+  onEdit,
 }) => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   return (
@@ -70,42 +72,57 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
                   {task.title}
                 </span>
 
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer h-6 w-6"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <TrashIcon className="h-3 w-3" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Hapus Tugas?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tindakan ini tidak dapat dibatalkan. Tugas "
-                        <strong>{task.title}</strong>" akan dihapus permanen.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-                        Batal
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await onDelete(task.id);
-                        }}
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 hover:bg-slate-100 text-slate-500 cursor-pointer"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(task);
+                    }}
+                  >
+                    <PencilIcon className="h-3 w-3" />
+                  </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="cursor-pointer h-6 w-6"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        Ya, Hapus
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        <TrashIcon className="h-3 w-3" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Tugas?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tindakan ini tidak dapat dibatalkan. Tugas "
+                          <strong>{task.title}</strong>" akan dihapus permanen.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                          Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await onDelete(task.id);
+                          }}
+                        >
+                          Ya, Hapus
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </CardHeader>
 
               <CardContent className="mt-1">

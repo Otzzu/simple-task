@@ -15,6 +15,7 @@ function App() {
     Done: [],
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchTasks = useCallback(async (signal?: AbortSignal) => {
@@ -29,7 +30,7 @@ function App() {
         return;
       }
       console.error(err);
-      toast.error("Something went wrong!!");
+      toast.error("Gagal mengambil data task");
     } finally {
       setLoading(false);
     }
@@ -37,9 +38,7 @@ function App() {
 
   useEffect(() => {
     const controller = new AbortController();
-
     fetchTasks(controller.signal);
-
     return () => {
       controller.abort();
     };
@@ -70,11 +69,65 @@ function App() {
         return { ...data, isError: true };
       } else {
         return {
-          message: "Something went wrong",
+          message: "Gagal membuat task",
           isError: true,
         };
       }
     }
+  };
+
+  const handleUpdateTask = async (
+    title: string,
+    description: string
+  ): Promise<{
+    data?: Task;
+    message: string;
+    details?: Record<string, string>;
+    isError: boolean;
+  }> => {
+    if (!editingTask) return { message: "No task selected", isError: true };
+
+    try {
+      const data = await client.put<ApiResponse<Task>>(
+        `/tasks/${editingTask.id}`,
+        {
+          title,
+          description,
+        }
+      );
+      await fetchTasks();
+      toast.success("Berhasil memperbarui task");
+      return { ...data.data, isError: false };
+    } catch (err: unknown) {
+      toast.error("Gagal memperbarui task");
+      console.error(err);
+      if (err instanceof AxiosError) {
+        const data = (err.response?.data as ApiErrorResponse) || null;
+        return { ...data, isError: true };
+      } else {
+        return {
+          message: "Gagal memperbarui task",
+          isError: true,
+        };
+      }
+    }
+  };
+
+  const handleModalSubmit = (title: string, description: string) => {
+    if (editingTask) {
+      return handleUpdateTask(title, description);
+    }
+    return handleCreateTask(title, description);
+  };
+
+  const openCreateModal = () => {
+    setEditingTask(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (task: Task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
   };
 
   return (
@@ -88,7 +141,7 @@ function App() {
             </h1>
             <p className="text-slate-500 text-sm">Manage tasks</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+          <Button onClick={openCreateModal} className="gap-2">
             <PlusIcon className="h-4 w-4" />
             New Task
           </Button>
@@ -100,15 +153,29 @@ function App() {
               Loading board...
             </div>
           ) : (
-            <KanbanBoard initialTasks={tasks} refreshTasks={fetchTasks} />
+            <KanbanBoard
+              initialTasks={tasks}
+              refreshTasks={async () => await fetchTasks()}
+              onEditTask={openEditModal}
+            />
           )}
         </main>
 
         <CreateTaskModal
-          key={isModalOpen ? "open" : "closed"}
+          key={
+            isModalOpen
+              ? editingTask
+                ? `edit-${editingTask.id}`
+                : "create"
+              : "closed"
+          }
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleCreateTask}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingTask(null);
+          }}
+          onSubmit={handleModalSubmit}
+          initialData={editingTask}
         />
       </div>
     </div>

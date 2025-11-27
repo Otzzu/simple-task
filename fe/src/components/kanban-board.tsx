@@ -10,11 +10,13 @@ import { toast } from "sonner";
 interface KanbanBoardProps {
   initialTasks: GroupedTasks;
   refreshTasks: () => Promise<void>;
+  onEditTask: (task: Task) => void;
 }
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({
   initialTasks,
   refreshTasks,
+  onEditTask,
 }) => {
   const [tasks, setTasks] = useState<GroupedTasks>(initialTasks);
 
@@ -162,6 +164,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       index={index}
                       onDelete={handleDelete}
                       onStatusChange={handleStatusChange}
+                      onEdit={onEditTask}
                     />
                   ))}
                   {provided.placeholder}
