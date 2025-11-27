@@ -23,13 +23,29 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }, [initialTasks]);
 
   const handleDelete = async (id: string) => {
+    const previousTasks = { ...tasks };
+
+    const newTasks = { ...tasks };
+
+    for (const col of Object.keys(newTasks) as TaskStatus[]) {
+      const filtered = newTasks[col].filter((t) => t.id !== id);
+      if (filtered.length !== newTasks[col].length) {
+        newTasks[col] = filtered;
+        break;
+      }
+    }
+
+    setTasks(newTasks);
+
     try {
       await client.delete(`/tasks/${id}`);
-      await refreshTasks();
       toast.success("Berhasil menghapus task");
     } catch (err) {
-      toast.error("Gagal menghapus task");
+      setTasks(previousTasks);
       console.error(err);
+      toast.error("Gagal menghapus task");
+    } finally {
+      refreshTasks();
     }
   };
 
@@ -71,6 +87,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
         setTasks(initialTasks);
         toast.error("Gagal menyimpan perubahan ke server!");
         console.error(err);
+      } finally {
+        refreshTasks();
       }
     }
   };
@@ -96,11 +114,11 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
       try {
         await client.put(`/tasks/${id}`, { status: newStatus });
-        toast.success("Status diperbarui");
       } catch (err) {
         toast.error("Gagal update status");
-        refreshTasks();
         console.error(err);
+      } finally {
+        refreshTasks();
       }
     }
   };
