@@ -20,7 +20,7 @@ services:
       - ./be/.env
     depends_on:
       - db
-    command: sh -c "npx sequelize-cli db:migrate && npm start"
+    command: sh -c "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && npm start"
   
   frontend:
     build: ./fe
